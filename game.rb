@@ -1,23 +1,34 @@
 class Game
 
-    def initialize 
-        puts 
-        puts "+++++++++++++++++++++++++++".rjust(69)
-        puts "Let's play Hangman!".rjust(65)
-        puts "+++++++++++++++++++++++++++".rjust(69)
-        puts
+    attr_accessor :guesses_left, :correct_guesses, :incorrect_guesses, :word, :mystery_word
+    def initialize
         @guesses_left = 6
-        @correct_guesses = []
-        @incorrect_guesses = []
+        @correct_guesses = Array.new
+        @incorrect_guesses = Array.new
         @word = choose_word
+        @guess = ""
     end
 
-    def play 
-        loop do 
-            game_over? || is_winner?
-            player_guess
-            check_for_letter
-        end
+    def to_json(*options) 
+        as_json(*options).to_json(*options)
+    end
+
+    def as_json(options={})
+        {
+            guesses_left: @guesses_left,
+            correct_guesses: @correct_guesses,
+            incorrect_guesses: @incorrect_guesses,
+            mystery_word: @mystery_word,
+            word: @word,
+            guess: @guess
+        }
+    end
+
+    def serialize 
+        data = self.to_json
+        Dir.mkdir("savedgames") unless Dir.exists? "savedgames"
+        savedgame = File.new("savedgames/saved.txt", 'w')
+        savedgame.write(data)
     end
 
     def choose_word 
@@ -31,51 +42,76 @@ class Game
         word.length.between?(5, 12) ? word : choose_word
     end
 
-    def player_guess 
-        print "Guesses left: #{@guesses_left}. Choose a letter: "
+    def play 
+        loop do
+            game_over? || is_winner?
+            player_guess
+            check_for_letter
+        end
+    end
+
+    def player_guess
+        print "Guesses left: #{guesses_left}. Choose a letter: "
         player_choice = gets.chomp.downcase.strip 
         @guess = player_choice
         legal_player_guess?(player_choice)
     end
 
     def legal_player_guess?(letter) 
-        if @correct_guesses.include?(@guess) 
+        if @guess == "save"
+            puts "Saving and exiting game..."
+            serialize
+            exit
+        elsif correct_guesses.include?(@guess) 
             puts "The letter is already in the word:"
-        elsif @incorrect_guesses.include?(@guess) || letter.match(/[^a-z]/) || letter.size > 1 
+        elsif letter.match(/[^a-z]/) || incorrect_guesses.include?(@guess) || letter.size > 1 
            puts "Invalid entry. Please guess again."
            player_guess
         end
     end
 
     def check_for_letter
-        if @word.include?(@guess)
-            @correct_guesses.push(@guess)
+        if word.include?(@guess)
+            correct_guesses.push(@guess)
             update_word
         else 
             puts ["Nope", "Nada", "Nah", "Womp womp", "Narp"].sample
-            @incorrect_guesses.push(@guess)
+            incorrect_guesses.push(@guess)
             @guesses_left -= 1
         end
     end
 
     def update_word 
-        @word.split('').each_with_index { |el, i| el == @guess ? @mystery_word[i] = el : el}
+        word.split('').each_with_index { |el, i| el == @guess ? @mystery_word[i] = el : el}
         puts @mystery_word.rjust(60)
-    end
-
-    def is_winner? 
-        if !@mystery_word.include?("_")
-            puts "YOU'VE WON!"
-            exit
-        end
     end
 
     def game_over? 
         if @guesses_left == 0
-            puts "The word was: #{@word}. Better luck next time!"
+            puts "You lost! The word was #{word.upcase}. Better luck next time!".rjust(88)
             exit 
         else 
             false
         end
+    end
+
+    def is_winner? 
+        if !@mystery_word.include?("_")
+            puts "YOU'VE WON!!".rjust(65)
+            exit
+        end
+    end
+
+    def from_json
+        array = []
+        File.open('savedgames/saved.txt', 'r') do |f| 
+            f.each_line do |line|
+                data = JSON.parse(line)
+                data.each_with_index do |el, i| 
+                    self.instance_variable_set(self.instance_variables[i], el[1])
+                end
+            end
+        end
+        play
     end
 end
