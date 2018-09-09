@@ -1,0 +1,1 @@
+{"guesses_left":5,"correct_guesses":["s"],"incorrect_guesses":["a"],"mystery_word":"______s____","word":"fiddlestick","guess":"save"}

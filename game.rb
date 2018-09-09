@@ -27,7 +27,12 @@ class Game
     def serialize 
         data = self.to_json
         Dir.mkdir("savedgames") unless Dir.exists? "savedgames"
-        savedgame = File.new("savedgames/saved.txt", 'w')
+        File.file?('savedgames/saved_1.txt') ? new_save_state(data) : savedgame = File.new("savedgames/saved_1.txt", 'w')
+    end
+
+    def new_save_state(data)
+        current_file = Dir['savedgames/*'][-1].match(/[\d]/)[0].to_i
+        savedgame = File.new("savedgames/saved_#{current_file+1}.txt", 'w')
         savedgame.write(data)
     end
 
@@ -103,8 +108,9 @@ class Game
     end
 
     def from_json
-        array = []
-        File.open('savedgames/saved.txt', 'r') do |f| 
+        choice = choose_save_game
+        puts choice
+        File.open(choice, 'r') do |f| 
             f.each_line do |line|
                 data = JSON.parse(line)
                 data.each_with_index do |el, i| 
@@ -113,5 +119,14 @@ class Game
             end
         end
         play
+    end
+
+    def choose_save_game 
+        puts "Choose an option from the list of saved games!"
+        Dir["savedgames/*"].each_with_index do |file, i|
+            puts "#{i}. #{file}"
+        end
+        choice = gets.chomp.strip.to_i
+        Dir["savedgames/*"][choice]
     end
 end
