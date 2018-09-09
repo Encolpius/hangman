@@ -27,7 +27,12 @@ class Game
     def serialize 
         data = self.to_json
         Dir.mkdir("savedgames") unless Dir.exists? "savedgames"
-        File.file?('savedgames/saved_1.txt') ? new_save_state(data) : savedgame = File.new("savedgames/saved_1.txt", 'w')
+        File.file?('savedgames/saved_1.txt') ? new_save_state(data) : save(data)
+    end
+
+    def save(data)
+        savedgame = File.new("savedgames/saved_1.txt", 'w')
+        savedgame.write(data)
     end
 
     def new_save_state(data)
@@ -58,18 +63,25 @@ class Game
     def player_guess
         print "Guesses left: #{guesses_left}. Choose a letter: "
         player_choice = gets.chomp.downcase.strip 
-        @guess = player_choice
         legal_player_guess?(player_choice)
+        @guess = player_choice
     end
 
-    def legal_player_guess?(letter) 
-        if @guess == "save"
+    def legal_player_guess?(choice) 
+        choice.gsub!(" ", "")
+        if choice.size == 0
+            puts "Please provide a letter."
+            player_guess
+        elsif choice == "save"
             puts "Saving and exiting game..."
             serialize
             exit
+        elsif choice == "letters"
+            puts "Incorrect letters: #{@incorrect_guesses.join(", ").upcase}"
+            player_guess
         elsif correct_guesses.include?(@guess) 
             puts "The letter is already in the word:"
-        elsif letter.match(/[^a-z]/) || incorrect_guesses.include?(@guess) || letter.size > 1 
+        elsif choice.match(/[^a-z]/) || incorrect_guesses.include?(@guess) || choice.size > 1
            puts "Invalid entry. Please guess again."
            player_guess
         end
@@ -109,7 +121,6 @@ class Game
 
     def from_json
         choice = choose_save_game
-        puts choice
         File.open(choice, 'r') do |f| 
             f.each_line do |line|
                 data = JSON.parse(line)
@@ -118,15 +129,20 @@ class Game
                 end
             end
         end
+        puts "Loading game..."
         play
     end
 
     def choose_save_game 
         puts "Choose an option from the list of saved games!"
         Dir["savedgames/*"].each_with_index do |file, i|
-            puts "#{i}. #{file}"
+            puts "#{i+1}. #{file}"
         end
-        choice = gets.chomp.strip.to_i
-        Dir["savedgames/*"][choice]
+        choice = gets.chomp.strip
+        while choice.match(/\D/) || Dir["savedgames/*"][choice.to_i-1] == nil || choice.to_i == 0
+            puts "Invalid input"
+            choice = gets.chomp.strip
+        end
+        Dir["savedgames/*"][choice.to_i-1]
     end
 end

@@ -1,1 +1,1 @@
-{"guesses_left":5,"correct_guesses":["s"],"incorrect_guesses":["a"],"mystery_word":"______s____","word":"fiddlestick","guess":"save"}
+{"guesses_left":3,"correct_guesses":["e","i"],"incorrect_guesses":["a","s","o"],"mystery_word":"_i__e_","word":"picket","guess":"save"}

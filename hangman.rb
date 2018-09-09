@@ -15,11 +15,11 @@ class Hangman
         puts "2. Load Game".rjust(54)
         puts "3. Exit".rjust(49)
         puts
+        puts "What would you like to do?"
         choose_option
     end
 
     def choose_option 
-        puts "What would you like to do?"
         option = gets.chomp.downcase.strip.to_i
         if option == 1 
             puts "Starting a new game..."
@@ -28,8 +28,11 @@ class Hangman
         elsif option == 2
             game = Game.new
             game.from_json
+        elsif option == 3 
+            exit
         else 
-            exit 
+            puts "Invalid input." 
+            choose_option
         end
     end
 end

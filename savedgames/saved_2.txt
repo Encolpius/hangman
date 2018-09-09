@@ -1,0 +1,1 @@
+{"guesses_left":3,"correct_guesses":["i"],"incorrect_guesses":["a","e","n"],"mystery_word":"_____i__","word":"stultify","guess":"save"}
